@@ -1,12 +1,14 @@
-import REact from 'react';
-import { View } from 'react-native';
+import React from 'react';
+import {View, Text} from 'react-native';
 
-import { COLORS,FONTS, SIZES, icons } from '../constants';
+import {COLORS, FONTS, SIZES, icons} from '../constants';
 
-const Home = () =>{
-  <View>
-    <Text>HOMEPAGE</Text>    
-  </View>
-}
+const Home = () => {
+  return (
+    <View>
+      <Text>HOMEPAGE</Text>
+    </View>
+  );
+};
 
 export default Home;
