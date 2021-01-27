@@ -10,6 +10,8 @@ import {
   Animated,
 } from 'react-native';
 
+import {VictoryPie} from 'victory-native';
+
 import {COLORS, FONTS, SIZES, icons} from '../constants';
 
 const Home = () => {
@@ -607,6 +609,81 @@ const Home = () => {
     );
   }
 
+  function processCategoryDataToDispalay() {
+    // Filter expenses with "Comfirmed" status
+    let chartData = categories.map((item) => {
+      let confirmExpenses = item.expenses.filter((a) => a.status == 'C');
+      var total = confirmExpenses.reduce((a, b) => a + (b.total || 0), 0);
+
+      return {
+        name: item.name,
+        y: total,
+        expenseCount: confirmExpenses.length,
+        color: item.color,
+        id: item.id,
+      };
+    });
+
+    // Filter out categories with no data/expenses
+    let filterChartData = chartData.filter((a) => a.y > 0);
+
+    // Calculate the total expenses
+    let totalExpense = filterChartData.reduce((a, b) => a + (b.y || 0), 0);
+
+    // Calculate percentage and repopulate chart data
+    let finalChartData = filterChartData.map((item) => {
+      let percentage = ((item.y / totalExpense) * 100).toFixed(0);
+      return {
+        label: `${percentage}%`,
+        y: Number(item.y),
+        expenseCount: item.expenseCount,
+        color: item.color,
+        name: item.name,
+        id: item.id,
+      };
+    });
+    return finalChartData;
+  }
+
+  function renderChart() {
+    let chartData = processCategoryDataToDispalay();
+    let colorScales = chartData.map((item) => item.color);
+    let totalExpenseCount = chartData.reduce(
+      (a, b) => a + (b.expenseCount || 0),
+      0,
+    );
+
+    return (
+      <View style={{alignItems: 'center', justifyContent: 'center'}}>
+        <VictoryPie
+          data={chartData}
+          colorScale={colorScales}
+          labels={(datum) => `${datum.y}`}
+          radius={SIZES.width * 0.4 - 10}
+          innerRadius={70}
+          labelRadius={({innerRadius}) =>
+            (SIZES.width * 0.4 + innerRadius) / 2.5
+          }
+          style={{
+            labels: {fill: COLORS.white, ...FONTS.body3},
+            parent: {
+              ...styles.shadow,
+            },
+          }}
+          width={SIZES.width * 0.8}
+          height={SIZES.width * 0.8}
+        />
+
+        <View style={{position: 'absolute', top: '42%', left: '42%'}}>
+          <Text style={{...FONTS.h1, textAlign: 'center'}}>
+            {totalExpenseCount}
+          </Text>
+          <Text style={{textAlign: 'center', ...FONTS.body3}}>Expenses</Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={{flex: 1, backgroundColor: COLORS.lightGray2}}>
       {/* Nav Bar Section */}
@@ -620,13 +697,14 @@ const Home = () => {
 
       <ScrollView
         contentContainerStyle={{paddingBottom: 60}}
-        persistentScrollbar={true}>
+        showsVerticalScrollIndicator={false}>
         {viewMode == 'list' && (
           <View>
             {renderCategoryList()}
             {renderIncomingExpenses()}
           </View>
         )}
+        {viewMode == 'chart' && <View>{renderChart()}</View>}
       </ScrollView>
     </View>
   );
