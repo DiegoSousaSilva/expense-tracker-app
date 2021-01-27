@@ -212,7 +212,7 @@ const Home = () => {
     },
   ];
 
-  const categoryListHeightAnimationValue = useRef(new Animated.Value(115))
+  const categoryListHeightAnimationValue = useRef(new Animated.Value(130))
     .current;
 
   const [categories, setCategories] = useState(categoriesData);
@@ -385,6 +385,9 @@ const Home = () => {
     const renderItem = ({item}) => {
       return (
         <TouchableOpacity
+          onPress={() => {
+            setSelectedCategory(item);
+          }}
           style={{
             flex: 1,
             flexDirection: 'row',
@@ -394,8 +397,7 @@ const Home = () => {
             borderRadius: 5,
             backgroundColor: COLORS.white,
             ...styles.shadow,
-          }}
-          onPress={() => setSelectedCategory(item)}>
+          }}>
           <Image
             source={item.icon}
             style={{
@@ -436,13 +438,13 @@ const Home = () => {
           onPress={() => {
             if (showMoreToogle) {
               Animated.timing(categoryListHeightAnimationValue, {
-                toValue: 115,
+                toValue: 130,
                 duration: 300,
                 useNativeDriver: false,
               }).start();
             } else {
               Animated.timing(categoryListHeightAnimationValue, {
-                toValue: 172.5,
+                toValue: 190,
                 duration: 300,
                 useNativeDriver: false,
               }).start();
@@ -462,6 +464,149 @@ const Home = () => {
     );
   }
 
+  function renderIcomingExpensesTitle() {
+    return (
+      <View style={{padding: SIZES.padding, color: COLORS.lightGray2}}>
+        <Text style={{color: COLORS.primary, ...FONTS.h3}}>
+          Icoming Expenses
+        </Text>
+        <Text style={{color: COLORS.darkgray, ...FONTS.body4}}>12 total</Text>
+      </View>
+    );
+  }
+
+  function renderIncomingExpenses() {
+    let allExpenses = selectedCategory ? selectedCategory.expenses : [];
+    // Fillter pending expenses
+    let incomingExpenses = allExpenses.filter((a) => a.status == 'P');
+
+    const renderItem = ({item, index}) => {
+      return (
+        <View
+          style={{
+            width: 300,
+            marginRight: SIZES.padding,
+            marginLeft: index == 0 ? SIZES.padding : 0,
+            marginVertical: SIZES.radius,
+            borderRadius: SIZES.radius,
+            backgroundColor: COLORS.white,
+            ...styles.shadow,
+          }}>
+          {/*Title*/}
+          <View
+            style={{
+              flexDirection: 'row',
+              padding: SIZES.padding,
+              alignItems: 'center',
+            }}>
+            <View
+              style={{
+                height: 50,
+                width: 50,
+                backgroundColor: COLORS.lightGray,
+                borderRadius: 25,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: SIZES.base,
+              }}>
+              <Image
+                source={selectedCategory.icon}
+                style={{
+                  width: 30,
+                  height: 30,
+                  tintColor: selectedCategory.color,
+                }}
+              />
+            </View>
+            <Text style={{color: selectedCategory.color, ...FONTS.h3}}>
+              {selectedCategory.name}
+            </Text>
+          </View>
+
+          {/* Expenses description*/}
+          <View style={{paddingHorizontal: SIZES.padding}}>
+            {/* Title and Description */}
+            <Text style={{...FONTS.h2}}>{item.title}</Text>
+            <Text
+              style={{
+                ...FONTS.body3,
+                flexWrap: 'wrap',
+                color: COLORS.darkgray,
+              }}>
+              {item.description}
+            </Text>
+
+            {/* Location */}
+            <Text style={{marginTop: SIZES.padding, ...FONTS.h4}}>
+              Location
+            </Text>
+            <View style={{flexDirection: 'row'}}>
+              <Image
+                source={icons.pin}
+                style={{
+                  width: 20,
+                  height: 20,
+                  tintColor: COLORS.darkgray,
+                  marginRight: 5,
+                }}
+              />
+              <Text
+                style={{
+                  marginBottom: SIZES.base,
+                  color: COLORS.darkgray,
+                  ...FONTS.body4,
+                }}>
+                {item.location}
+              </Text>
+            </View>
+          </View>
+
+          {/* Price */}
+          <View
+            style={{
+              height: 50,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderBottomStartRadius: SIZES.radius,
+              borderBottomEndRadius: SIZES.radius,
+              backgroundColor: selectedCategory.color,
+            }}>
+            <Text style={{color: COLORS.white, ...FONTS.body3}}>
+              COMFIRM {item.total.toFixed(2)} USD
+            </Text>
+          </View>
+        </View>
+      );
+    };
+
+    return (
+      <View>
+        {renderIcomingExpensesTitle()}
+
+        {incomingExpenses.length > 0 && (
+          <FlatList
+            data={incomingExpenses}
+            renderItem={renderItem}
+            keyExtractor={(item) => `${item.id}`}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+          />
+        )}
+
+        {incomingExpenses.length == 0 && (
+          <View
+            style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: 300,
+            }}>
+            <Text color={{...FONTS.h3, Color: COLORS.primary}}>No record</Text>
+          </View>
+        )}
+      </View>
+    );
+  }
+
   return (
     <View style={{flex: 1, backgroundColor: COLORS.lightGray2}}>
       {/* Nav Bar Section */}
@@ -473,8 +618,15 @@ const Home = () => {
       {/* Category Header Section */}
       {renderCategoryHeaderSection()}
 
-      <ScrollView contentContainerStyle={{paddingBottom: 60}}>
-        {viewMode == 'list' && <View>{renderCategoryList()}</View>}
+      <ScrollView
+        contentContainerStyle={{paddingBottom: 60}}
+        persistentScrollbar={true}>
+        {viewMode == 'list' && (
+          <View>
+            {renderCategoryList()}
+            {renderIncomingExpenses()}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
